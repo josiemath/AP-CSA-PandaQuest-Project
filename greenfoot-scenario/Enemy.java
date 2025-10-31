@@ -14,6 +14,8 @@ public class Enemy extends Actor
     private int direction = 0; // 0=right, 1=down, 2=left, 3=up
     private int moveCounter = 0;
     private int moveInterval = 20; // Move every 20 act cycles
+    private static final int DIRECTION_CHANGE_PROBABILITY = 5; // 5% chance per move
+    private static final int RANDOM_RANGE = 100;
     
     /**
      * Constructor for Enemy.
@@ -82,7 +84,7 @@ public class Enemy extends Actor
         }
         
         // Occasionally change direction randomly
-        if (Greenfoot.getRandomNumber(100) < 5) {
+        if (Greenfoot.getRandomNumber(RANDOM_RANGE) < DIRECTION_CHANGE_PROBABILITY) {
             direction = Greenfoot.getRandomNumber(4);
         }
     }

@@ -17,6 +17,7 @@ public class Panda extends Actor
     private int speed = 3;
     private int health = 3;
     private int invincibilityTimer = 0;
+    private static final int INVINCIBILITY_DURATION = 60; // 60 act cycles of invincibility
     
     /**
      * Constructor for Panda.
@@ -114,7 +115,8 @@ public class Panda extends Actor
             getWorld().removeObject(bamboo);
             PandaWorld world = (PandaWorld) getWorld();
             world.addScore(10);
-            Greenfoot.playSound("coin.wav");  // Optional sound effect
+            // Optional: Uncomment the line below and add coin.wav to sounds/ folder
+            // Greenfoot.playSound("coin.wav");
         }
         
         // Check for enemy collision
@@ -132,7 +134,7 @@ public class Panda extends Actor
     private void takeDamage()
     {
         health--;
-        invincibilityTimer = 60;  // 60 act cycles of invincibility
+        invincibilityTimer = INVINCIBILITY_DURATION;
         
         if (health <= 0) {
             PandaWorld world = (PandaWorld) getWorld();

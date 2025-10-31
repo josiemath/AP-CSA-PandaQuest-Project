@@ -16,6 +16,7 @@ public class PandaWorld extends World
     private static final int WORLD_WIDTH = 800;
     private static final int WORLD_HEIGHT = 600;
     private static final int CELL_SIZE = 50;
+    private static final int UI_TEXT_Y_POSITION = 1;
     
     /**
      * Constructor for PandaWorld.
@@ -56,7 +57,7 @@ public class PandaWorld extends World
         
         // Display initial score
         showText("Score: " + score + " | Bamboo: " + bambooCollected, 
-                 WORLD_WIDTH / CELL_SIZE / 2, 1);
+                 WORLD_WIDTH / CELL_SIZE / 2, UI_TEXT_Y_POSITION);
     }
     
     /**
@@ -115,6 +116,6 @@ public class PandaWorld extends World
     private void updateScoreDisplay()
     {
         showText("Score: " + score + " | Bamboo: " + bambooCollected, 
-                 WORLD_WIDTH / CELL_SIZE / 2, 1);
+                 WORLD_WIDTH / CELL_SIZE / 2, UI_TEXT_Y_POSITION);
     }
 }
