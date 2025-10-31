@@ -5,7 +5,7 @@ public enum PowerUp {
     /**
      * Reveals a safe tile automatically.
      */
-    REVEAL_SAFE,
+    REVEAL_SAFE, //these are enums - this is something new!
     
     /**
      * Grants an extra life.
