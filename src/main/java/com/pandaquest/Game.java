@@ -57,13 +57,19 @@ public class Game {
         }
 
         // Check for power-up
+        PowerUp powerUp = null;
         if (tile.hasPowerUp()) {
-            applyPowerUp(tile.getPowerUp());
+            powerUp = tile.getPowerUp();
             tile.setPowerUp(null); // Remove power-up after use
         }
 
         // Reveal the tile
         boolean hitBamboo = board.revealTile(row, col);
+
+        // Apply power-up effect after revealing the tile
+        if (powerUp != null) {
+            applyPowerUp(powerUp, row, col);
+        }
 
         if (hitBamboo) {
             lives--;
@@ -86,8 +92,10 @@ public class Game {
     /**
      * Applies a power-up effect.
      * @param powerUp the power-up to apply
+     * @param row the row where the power-up was collected
+     * @param col the column where the power-up was collected
      */
-    private void applyPowerUp(PowerUp powerUp) {
+    private void applyPowerUp(PowerUp powerUp, int row, int col) {
         switch (powerUp) {
             case EXTRA_LIFE:
                 lives++;
@@ -96,7 +104,7 @@ public class Game {
                 revealRandomSafeTile();
                 break;
             case REVEAL_ADJACENT:
-                // This is handled during tile reveal
+                revealAdjacentTiles(row, col);
                 break;
         }
     }
@@ -111,6 +119,28 @@ public class Game {
                 if (!tile.hasBamboo() && !tile.isRevealed()) {
                     board.revealTile(i, j);
                     return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Reveals all adjacent tiles around a position.
+     * @param row the center row
+     * @param col the center column
+     */
+    private void revealAdjacentTiles(int row, int col) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i == 0 && j == 0) continue;
+                int newRow = row + i;
+                int newCol = col + j;
+                if (newRow >= 0 && newRow < board.getRows() && 
+                    newCol >= 0 && newCol < board.getCols()) {
+                    Tile tile = board.getTile(newRow, newCol);
+                    if (!tile.isRevealed() && !tile.hasBamboo()) {
+                        board.revealTile(newRow, newCol);
+                    }
                 }
             }
         }
