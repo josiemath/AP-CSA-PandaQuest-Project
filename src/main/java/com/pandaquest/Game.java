@@ -1,5 +1,9 @@
 package com.pandaquest;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 /**
  * Manages the game state and logic.
  */
@@ -9,6 +13,7 @@ public class Game {
     private int lives;
     private boolean gameOver;
     private boolean levelComplete;
+    private final Random random;
     private static final int STARTING_LIVES = 3;
 
     /**
@@ -19,6 +24,7 @@ public class Game {
         this.lives = STARTING_LIVES;
         this.gameOver = false;
         this.levelComplete = false;
+        this.random = new Random();
         initializeLevel();
     }
 
@@ -113,14 +119,21 @@ public class Game {
      * Reveals a random safe (non-bamboo) tile.
      */
     private void revealRandomSafeTile() {
+        // Collect all unrevealed safe tiles
+        List<int[]> safeTiles = new ArrayList<>();
         for (int i = 0; i < board.getRows(); i++) {
             for (int j = 0; j < board.getCols(); j++) {
                 Tile tile = board.getTile(i, j);
                 if (!tile.hasBamboo() && !tile.isRevealed()) {
-                    board.revealTile(i, j);
-                    return;
+                    safeTiles.add(new int[]{i, j});
                 }
             }
+        }
+        
+        // Reveal a random safe tile if any exist
+        if (!safeTiles.isEmpty()) {
+            int[] position = safeTiles.get(random.nextInt(safeTiles.size()));
+            board.revealTile(position[0], position[1]);
         }
     }
 

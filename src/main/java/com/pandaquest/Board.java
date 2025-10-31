@@ -146,10 +146,18 @@ public class Board {
      * @param count number of power-ups to place
      */
     public void placePowerUps(int count) {
+        // Calculate maximum eligible positions (non-bamboo tiles)
+        int eligiblePositions = (rows * cols) - bambooCount;
+        int actualCount = Math.min(count, eligiblePositions);
+        
         int placed = 0;
-        while (placed < count) {
+        int attempts = 0;
+        int maxAttempts = eligiblePositions * 3; // Safety limit to prevent infinite loop
+        
+        while (placed < actualCount && attempts < maxAttempts) {
             int row = random.nextInt(rows);
             int col = random.nextInt(cols);
+            attempts++;
             
             Tile tile = tiles[row][col];
             if (!tile.hasBamboo() && !tile.hasPowerUp()) {
