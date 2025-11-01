@@ -1,5 +1,3 @@
-# AP-CSA-PandaQuest-Project
-
 # PandaQuest
 
 Welcome to PandaQuest — a beginner-friendly 2D platformer/adventure game built with Greenfoot. This README is written for someone new to programming and to the game. It explains what PandaQuest is, how to run and play it using Greenfoot, and gives a gentle introduction to the code so you can explore, learn, and contribute.
