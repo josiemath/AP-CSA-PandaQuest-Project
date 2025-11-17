@@ -35,7 +35,9 @@ public class TileMarker extends Actor
             img.fillRect(0, 0, 50, 50);
             img.setColor(Color.BLACK);
             img.drawRect(0, 0, 49, 49);
-            img.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 24));
+            
+            Font font = new Font("Arial", true, false, 24);
+            img.setFont(font);
             img.drawString(String.valueOf(adjacentCount), 18, 35);
         }
         else {
