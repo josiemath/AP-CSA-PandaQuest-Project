@@ -1,5 +1,4 @@
 import greenfoot.*;
-import java.awt.Color;
 /**
  * PandaWorld - The main game world for PandaQuest.
  *
@@ -46,6 +45,7 @@ public class PandaWorld extends World
         initializeGame();
         prepare();
         drawFrame();
+        setPaintOrder(Panda.class, Bamboo.class, TileMarker.class);
     }
 
     /**
