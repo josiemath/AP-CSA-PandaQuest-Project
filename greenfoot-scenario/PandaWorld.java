@@ -1,4 +1,6 @@
 import greenfoot.*;
+import java.util.List;
+
 /**
  * PandaWorld - The main game world for PandaQuest.
  *
@@ -11,8 +13,13 @@ import greenfoot.*;
  * without overlapping the board tiles. The frame is drawn on the
  * world's background image.
  *
+ * Also:
+ * - Prevent the Panda actor from moving into the padding/frame area.
+ * - Ensure the Panda is always drawn above tiles, numbers, and bamboo
+ *   by setting the paint order so Panda is on top.
+ *
  * @author PandaQuest Team
- * @version 1.1
+ * @version 1.2
  */
 public class PandaWorld extends World
 {
@@ -40,10 +47,46 @@ public class PandaWorld extends World
         score = 0;
         initializeGame();
 
+        // Ensure Panda is drawn above markers and bamboo so it is always visible.
+        // Paint order: classes listed first are painted on top.
+        setPaintOrder(Panda.class, TileMarker.class, Bamboo.class, Actor.class);
+
         // Draw frame/padding background so the board is visually inset.
         drawBoardFrame();
 
         prepare();
+    }
+
+    /**
+     * World act loop - used to enforce constraints each frame.
+     * We use it to keep the Panda inside the playable board area (not in padding).
+     */
+    public void act()
+    {
+        clampPandasToBoard();
+    }
+
+    /**
+     * Clamp any Panda actors to the interior board area so they cannot go into the frame/padding.
+     */
+    private void clampPandasToBoard()
+    {
+        List<Panda> pandas = getObjects(Panda.class);
+        if (pandas == null) return;
+        int minX = PADDING;
+        int minY = PADDING;
+        int maxX = PADDING + GRID_WIDTH - 1;
+        int maxY = PADDING + GRID_HEIGHT - 1;
+
+        for (Panda p : pandas) {
+            int x = p.getX();
+            int y = p.getY();
+            int newX = Math.max(minX, Math.min(x, maxX));
+            int newY = Math.max(minY, Math.min(y, maxY));
+            if (newX != x || newY != y) {
+                p.setLocation(newX, newY);
+            }
+        }
     }
 
     /**
