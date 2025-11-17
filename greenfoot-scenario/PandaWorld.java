@@ -1,4 +1,5 @@
 import greenfoot.*;
+import java.awt.Color;
 /**
  * PandaWorld - The main game world for PandaQuest.
  *
@@ -12,80 +13,148 @@ import greenfoot.*;
 public class PandaWorld extends World
 {
     private static final int CELL_SIZE = 50;
-    private static final int GRID_WIDTH = 8;
-    private static final int GRID_HEIGHT = 8;
-   
+
+    // Playable grid size (kept as original 8x8)
+    private static final int PLAY_WIDTH = 8;
+    private static final int PLAY_HEIGHT = 8;
+
+    // Frame width (in cells) around the playable board where status is shown
+    private static final int FRAME_SIZE = 1;
+
+    // Actual world size includes frame on all sides
+    private static final int WORLD_WIDTH = PLAY_WIDTH + FRAME_SIZE * 2;
+    private static final int WORLD_HEIGHT = PLAY_HEIGHT + FRAME_SIZE * 2;
+
     private int level;
     private int lives;
     private int score;
+    // Game state arrays use PLAY_* sizes (indices are in playable coordinates 0..PLAY_WIDTH-1)
     private boolean[][] bambooGrid;
     private boolean[][] revealedGrid;
-   
+
     /**
      * Constructor for PandaWorld.
      * Creates a new world with the specified grid dimensions.
      */
     public PandaWorld()
-    {    
-        super(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE);
+    {
+        // Create world larger than the playable grid so we can draw a frame around it
+        super(WORLD_WIDTH, WORLD_HEIGHT, CELL_SIZE);
         level = 1;
         lives = 3;
         score = 0;
         initializeGame();
         prepare();
+        drawFrame();
     }
-   
+
     /**
      * Initialize the game state.
      */
     private void initializeGame()
     {
-        bambooGrid = new boolean[GRID_WIDTH][GRID_HEIGHT];
-        revealedGrid = new boolean[GRID_WIDTH][GRID_HEIGHT];
-       
-        // Place bamboo randomly
+        bambooGrid = new boolean[PLAY_WIDTH][PLAY_HEIGHT];
+        revealedGrid = new boolean[PLAY_WIDTH][PLAY_HEIGHT];
+
+        // Place bamboo randomly (uses playable dimensions)
         int bambooCount = 5 + (level * 2);
         placeBambooRandomly(bambooCount);
     }
-   
+
     /**
-     * Place bamboo randomly on the grid.
+     * Place bamboo randomly on the playable grid.
      */
     private void placeBambooRandomly(int count)
     {
         int placed = 0;
         while (placed < count) {
-            int x = Greenfoot.getRandomNumber(GRID_WIDTH);
-            int y = Greenfoot.getRandomNumber(GRID_HEIGHT);
-           
+            int x = Greenfoot.getRandomNumber(PLAY_WIDTH);
+            int y = Greenfoot.getRandomNumber(PLAY_HEIGHT);
+
             if (!bambooGrid[x][y]) {
                 bambooGrid[x][y] = true;
                 placed++;
             }
         }
     }
-   
+
     /**
      * Prepare the world for the start of the program.
      * Add initial actors to the world.
      */
     private void prepare()
     {
-        // Add panda at starting position
+        // Add panda at starting position inside the frame (playable origin is offset by FRAME_SIZE)
         Panda panda = new Panda();
-        addObject(panda, 0, 0);
-       
-        // Display game info
+        addObject(panda, FRAME_SIZE, FRAME_SIZE);
+
+        // Display game info inside the top frame row (centered)
         showText("Level: " + level + " Lives: " + lives + " Score: " + score,
-                 GRID_WIDTH / 2, 0);
+                 WORLD_WIDTH / 2, 0);
     }
-   
+
     /**
-     * Reveal a tile at the specified position.
+     * Draw a visible frame around the playable board (for status text).
      */
-    public boolean revealTile(int x, int y)
+    private void drawFrame()
     {
-        if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+        GreenfootImage bg = getBackground();
+        if (bg == null) return;
+
+        bg.setColor(Color.BLACK);
+        int left = FRAME_SIZE * CELL_SIZE;
+        int top = FRAME_SIZE * CELL_SIZE;
+        int width = PLAY_WIDTH * CELL_SIZE;
+        int height = PLAY_HEIGHT * CELL_SIZE;
+
+        // Draw outer rectangle around playable area
+        bg.drawRect(left, top, width - 1, height - 1);
+
+        // Optionally draw a thin inner rectangle for a clearer frame (subtle)
+        bg.setColor(Color.DARK_GRAY);
+        bg.drawRect(left + 2, top + 2, width - 5, height - 5);
+    }
+
+    /**
+     * World act method - ensure Panda cannot move into the frame cells.
+     */
+    public void act()
+    {
+        // Clamp any Panda instances to stay within playable area
+        for (Object obj : getObjects(Panda.class)) {
+            Panda p = (Panda)obj;
+            int px = p.getX();
+            int py = p.getY();
+
+            int minX = FRAME_SIZE;
+            int minY = FRAME_SIZE;
+            int maxX = FRAME_SIZE + PLAY_WIDTH - 1;
+            int maxY = FRAME_SIZE + PLAY_HEIGHT - 1;
+
+            boolean moved = false;
+            int newX = px;
+            int newY = py;
+            if (px < minX) { newX = minX; moved = true; }
+            if (py < minY) { newY = minY; moved = true; }
+            if (px > maxX) { newX = maxX; moved = true; }
+            if (py > maxY) { newY = maxY; moved = true; }
+
+            if (moved) {
+                p.setLocation(newX, newY);
+            }
+        }
+    }
+
+    /**
+     * Reveal a tile at the specified world position.
+     * Note: x,y parameters are expected to be world coordinates. They are mapped to playable coordinates internally.
+     */
+    public boolean revealTile(int worldX, int worldY)
+    {
+        int x = worldToPlayX(worldX);
+        int y = worldToPlayY(worldY);
+
+        if (x < 0 || x >= PLAY_WIDTH || y < 0 || y >= PLAY_HEIGHT) {
             return false;
         }
 
@@ -98,7 +167,7 @@ public class PandaWorld extends World
         if (bambooGrid[x][y]) {
             // Hit bamboo - lose a life
             lives--;
-            addObject(new Bamboo(), x, y); // show bamboo visually
+            addObject(new Bamboo(), worldX, worldY); // show bamboo visually at world coords
             updateDisplay();
 
             if (lives <= 0) {
@@ -107,12 +176,12 @@ public class PandaWorld extends World
             return true;
         }
 
-        // Count adjacent bamboo
+        // Count adjacent bamboo (playable coords)
         int adjacentBamboo = countAdjacentBamboo(x, y);
 
-        // Add visual marker for this tile
+        // Add visual marker for this tile at world coords
         TileMarker marker = new TileMarker(adjacentBamboo);
-        addObject(marker, x, y);
+        addObject(marker, worldX, worldY);
 
         // Auto-reveal if no adjacent bamboo
         if (adjacentBamboo == 0) {
@@ -129,9 +198,9 @@ public class PandaWorld extends World
 
         return false;
     }
-   
+
     /**
-     * Count bamboo in adjacent tiles.
+     * Count bamboo in adjacent playable tiles (x,y are playable coords).
      */
     private int countAdjacentBamboo(int x, int y)
     {
@@ -141,8 +210,8 @@ public class PandaWorld extends World
                 if (i == 0 && j == 0) continue;
                 int newX = x + i;
                 int newY = y + j;
-                if (newX >= 0 && newX < GRID_WIDTH &&
-                    newY >= 0 && newY < GRID_HEIGHT &&
+                if (newX >= 0 && newX < PLAY_WIDTH &&
+                    newY >= 0 && newY < PLAY_HEIGHT &&
                     bambooGrid[newX][newY]) {
                     count++;
                 }
@@ -150,9 +219,9 @@ public class PandaWorld extends World
         }
         return count;
     }
-   
+
     /**
-     * Auto-reveal adjacent tiles recursively.
+     * Auto-reveal adjacent tiles recursively. Input coordinates are playable coords.
      */
     private void autoRevealAdjacent(int x, int y)
     {
@@ -161,16 +230,16 @@ public class PandaWorld extends World
                 if (i == 0 && j == 0) continue;
                 int newX = x + i;
                 int newY = y + j;
-                if (newX >= 0 && newX < GRID_WIDTH &&
-                    newY >= 0 && newY < GRID_HEIGHT &&
+                if (newX >= 0 && newX < PLAY_WIDTH &&
+                    newY >= 0 && newY < PLAY_HEIGHT &&
                     !revealedGrid[newX][newY] && !bambooGrid[newX][newY]) {
-                   
+
                     revealedGrid[newX][newY] = true;
 
-                    // Add visual marker
+                    // Add visual marker at corresponding world coords
                     int adjacentBamboo = countAdjacentBamboo(newX, newY);
                     TileMarker marker = new TileMarker(adjacentBamboo);
-                    addObject(marker, newX, newY);
+                    addObject(marker, playToWorldX(newX), playToWorldY(newY));
 
                     // Recurse if still zero
                     if (adjacentBamboo == 0) {
@@ -180,14 +249,14 @@ public class PandaWorld extends World
             }
         }
     }
-   
+
     /**
      * Check if the current level is complete.
      */
     private boolean isLevelComplete()
     {
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            for (int y = 0; y < GRID_HEIGHT; y++) {
+        for (int x = 0; x < PLAY_WIDTH; x++) {
+            for (int y = 0; y < PLAY_HEIGHT; y++) {
                 if (!bambooGrid[x][y] && !revealedGrid[x][y]) {
                     return false;
                 }
@@ -195,7 +264,7 @@ public class PandaWorld extends World
         }
         return true;
     }
-   
+
     /**
      * Handle level completion.
      */
@@ -203,45 +272,85 @@ public class PandaWorld extends World
     {
         level++;
         showText("Level " + (level - 1) + " Complete! Press SPACE for next level",
-                 GRID_WIDTH / 2, GRID_HEIGHT / 2);
+                 WORLD_WIDTH / 2, 0);
         Greenfoot.stop();
     }
-   
+
     /**
      * Handle game over.
      */
     private void gameOver()
     {
         showText("Game Over! Final Score: " + score,
-                 GRID_WIDTH / 2, GRID_HEIGHT / 2);
+                 WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
         Greenfoot.stop();
     }
-   
+
     /**
-     * Update the display with current game state.
+     * Update the display with current game state (placed in top frame row).
      */
     private void updateDisplay()
     {
         showText("Level: " + level + " Lives: " + lives + " Score: " + score,
-                 GRID_WIDTH / 2, 0);
+                 WORLD_WIDTH / 2, 0);
     }
-   
+
     /**
-     * Check if a position is revealed.
+     * Check if a world position (world coords) is revealed.
      */
-    public boolean isRevealed(int x, int y)
+    public boolean isRevealed(int worldX, int worldY)
     {
-        if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+        int x = worldToPlayX(worldX);
+        int y = worldToPlayY(worldY);
+
+        if (x < 0 || x >= PLAY_WIDTH || y < 0 || y >= PLAY_HEIGHT) {
             return false;
         }
         return revealedGrid[x][y];
     }
-   
+
     /**
-     * Get the number of adjacent bamboo for a position.
+     * Get the number of adjacent bamboo for a world-position.
      */
-    public int getAdjacentBambooCount(int x, int y)
+    public int getAdjacentBambooCount(int worldX, int worldY)
     {
+        int x = worldToPlayX(worldX);
+        int y = worldToPlayY(worldY);
+        if (x < 0 || x >= PLAY_WIDTH || y < 0 || y >= PLAY_HEIGHT) {
+            return 0;
+        }
         return countAdjacentBamboo(x, y);
+    }
+
+    /**
+     * Helper: convert world X coordinate to playable grid X coordinate.
+     */
+    private int worldToPlayX(int worldX)
+    {
+        return worldX - FRAME_SIZE;
+    }
+
+    /**
+     * Helper: convert world Y coordinate to playable grid Y coordinate.
+     */
+    private int worldToPlayY(int worldY)
+    {
+        return worldY - FRAME_SIZE;
+    }
+
+    /**
+     * Helper: convert playable X to world X.
+     */
+    private int playToWorldX(int playX)
+    {
+        return playX + FRAME_SIZE;
+    }
+
+    /**
+     * Helper: convert playable Y to world Y.
+     */
+    private int playToWorldY(int playY)
+    {
+        return playY + FRAME_SIZE;
     }
 }
