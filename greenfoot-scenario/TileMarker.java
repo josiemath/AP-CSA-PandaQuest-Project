@@ -62,8 +62,9 @@ public class TileMarker extends Actor
     {
         if (Greenfoot.isKeyDown("enter"))
         {
-            GreenfootImage = img GreenfootImage(50,50);
+            GreenfootImage img = new GreenfootImage(50,50);
             img.setColor(new Color(219,101,101);
+            setImage(img);
         }
     }
 }
