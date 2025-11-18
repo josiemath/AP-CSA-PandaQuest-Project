@@ -58,4 +58,12 @@ public class TileMarker extends Actor
     {
         // TileMarker is static
     }
+    public void getFlag()
+    {
+        if (Greenfoot.isKeyDown("enter"))
+        {
+            GreenfootImage = img GreenfootImage(50,50);
+            img.setColor(new Color(219,101,101);
+        }
+    }
 }
