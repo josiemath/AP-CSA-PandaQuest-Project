@@ -96,5 +96,30 @@ public class Panda extends Actor
             }
             moveDelay = MOVE_SPEED;
         }
+        if (Greenfoot.isKeyDown("a")){
+            PandaWorld world = (PandaWorld) getWorld();
+            if (world != null) {
+                int x = getX();
+                int y = getY();
+                
+                if (!world.isRevealed(x, y)) {
+                    world.addFlag(x, y);
+    
+                }
+            }
+        }
+        if (Greenfoot.isKeyDown("b")){
+            PandaWorld world = (PandaWorld) getWorld();
+            if (world != null) {
+                int x = getX();
+                int y = getY();
+                
+                if (!world.isRevealed(x, y)) {
+                    world.removeFlag(x, y);
+    
+                }
+            }
+        }
+        }
     }
-}
+
