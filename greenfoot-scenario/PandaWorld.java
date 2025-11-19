@@ -42,12 +42,13 @@ public class PandaWorld extends World
         level = 1;
         lives = 3;
         score = 0;
+        // In your World subclass constructor or setup method
         initializeGame();
         prepare();
         drawFrame();
         setPaintOrder(Panda.class, Bamboo.class, TileMarker.class);
     }
-
+    // In your World subclass constructor or setup method
     /**
      * Initialize the game state.
      */
@@ -87,7 +88,6 @@ public class PandaWorld extends World
         // Add panda at starting position inside the frame (playable origin is offset by FRAME_SIZE)
         Panda panda = new Panda();
         addObject(panda, FRAME_SIZE, FRAME_SIZE);
-
         // Display game info inside the top frame row (centered)
         showText("Level: " + level + " Lives: " + lives + " Score: " + score,
                  WORLD_WIDTH / 2, 0);
@@ -111,7 +111,7 @@ public class PandaWorld extends World
         bg.drawRect(left, top, width - 1, height - 1);
 
         // Optionally draw a thin inner rectangle for a clearer frame (subtle)
-        bg.setColor(Color.DARK_GRAY);
+        bg.setColor(Color.BLACK);
         bg.drawRect(left + 2, top + 2, width - 5, height - 5);
     }
 
@@ -182,6 +182,10 @@ public class PandaWorld extends World
         // Add visual marker for this tile at world coords
         TileMarker marker = new TileMarker(adjacentBamboo);
         addObject(marker, worldX, worldY);
+        
+    
+
+    
 
         // Auto-reveal if no adjacent bamboo
         if (adjacentBamboo == 0) {
@@ -198,7 +202,17 @@ public class PandaWorld extends World
 
         return false;
     }
-
+    public void addFlag(int worldX, int worldY)
+    {
+        FlagMarker flag = new FlagMarker();
+        addObject(flag, worldX, worldY);
+        updateDisplay();
+    }
+    public void removeFlag(int worldX, int worldY)
+    {
+        removeObjects(getObjectsAt(worldX, worldY, FlagMarker.class));
+        updateDisplay();
+    }
     /**
      * Count bamboo in adjacent playable tiles (x,y are playable coords).
      */
